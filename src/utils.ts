@@ -11,6 +11,8 @@ import {
   GenericError,
   PopupCancelledError
 } from './errors';
+declare var Office:any;
+declare var window: any;
 
 export const parseQueryResult = (queryString: string): AuthenticationResult => {
   if (queryString.indexOf('#') > -1) {
@@ -91,11 +93,24 @@ export const openPopup = (url: string) => {
   const height = 600;
   const left = window.screenX + (window.innerWidth - width) / 2;
   const top = window.screenY + (window.innerHeight - height) / 2;
+  window.dialog;
+  window.processMessage = function(arg:any) {
+    if(arg.message){
+      var messageFromDialog = JSON.parse(arg.message);
+    }
+    // showUserName(messageFromDialog.name);
+    window.dialog.close();
+  }
 
-  return window.open(
+  //we need to call Office.context.ui.messageParent(true.toString()); somewhere with the jwt
+
+  return Office.context.ui.displayDialogAsync(
     url,
-    'auth0:authorize:popup',
-    `left=${left},top=${top},width=${width},height=${height},resizable,scrollbars=yes,status=1`
+    {height, width, displayInIframe: true},
+    function (asyncResult: any) {
+      window.dialog = asyncResult.value;
+      window.dialog.addEventHandler(Office.EventType.DialogMessageReceived, window.processMessage);
+  }
   );
 };
 
