@@ -540,6 +540,22 @@ export default class Auth0Client {
     this._processOrgIdHint(decodedToken.claims.org_id);
   }
 
+  public async afterLogin(
+    client_id: string,
+    authResult: any,
+    scope: any,
+    audience: any
+  ) {
+    const cacheEntry = {
+      ...authResult,
+      scope,
+      audience,
+      client_id
+    };
+
+    await this.cacheManager.set(cacheEntry);
+  }
+
   /**
    * ```js
    * const user = await auth0.getUser();
