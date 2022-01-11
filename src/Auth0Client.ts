@@ -26,7 +26,7 @@ import {
 } from './cache';
 
 import TransactionManager from './transaction-manager';
-import { verify as verifyIdToken } from './jwt';
+import { verify as verifyIdToken, decode } from './jwt';
 import { AuthenticationError, GenericError, TimeoutError } from './errors';
 
 import {
@@ -543,15 +543,20 @@ export default class Auth0Client {
   public async afterLogin(
     client_id: string,
     authResult: any,
-    scope: any,
-    audience: any
+    audience: any,
+    scope?: string
   ) {
+    const decodedToken = decode(authResult.id_token);
     const cacheEntry = {
       ...authResult,
-      scope,
+      decodedToken: decodedToken,
       audience,
       client_id
     };
+
+    if (scope) {
+      cacheEntry.scope = scope;
+    }
 
     await this.cacheManager.set(cacheEntry);
   }
